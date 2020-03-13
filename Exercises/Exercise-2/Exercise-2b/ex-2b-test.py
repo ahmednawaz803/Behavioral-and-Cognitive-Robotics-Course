@@ -26,7 +26,7 @@ for episodes in range(20):
     b1 = parameters[episodes][30:35].reshape((5,1))
     b2 = parameters[episodes][35:37].reshape((2,1))
     print('Simulating the system for episode '+str(episodes)+'.')
-    for _ in range(800):
+    for _ in range(600):
         observation.resize(ninputs,1)
         Z1 = np.dot(W1, observation) + b1
         A1 = np.tanh(Z1)

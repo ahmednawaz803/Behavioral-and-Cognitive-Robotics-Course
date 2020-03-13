@@ -28,17 +28,25 @@ r_ls = []
 
 variation = lambda x : x + ppvariance
 
-for trials in range(1,5): # The convergence depends upon the randomness of the parameters, so this loop randomly initialize the matrix, if it does not converge.
+for trials in range(1,100): # The convergence depends upon the randomness of the parameters, so this loop randomly initialize the matrix, if it does not converge.
+    parameter_matrix = np.random.randn(pop_size, len(theta_0)) * pvariance # A matrix of randoms values, each row represents different set of neural net parameters.
+
     for gen in range(1,30):
         r=0
         r_ls = []
         for i_episode in range(pop_size):
             observation = env.reset()
+            r = 0
+            W1= parameter_matrix[i_episode][0:20]
+            W2= parameter_matrix[i_episode][20:30]
+            b1= parameter_matrix[i_episode][30:35]
+            b2= parameter_matrix[i_episode][35:37]
+
             for _ in range(200):
                 observation.resize(ninputs,1)
-                Z1 = np.dot(parameter_matrix[i_episode][0:20].reshape((5,4)), observation) + parameter_matrix[i_episode][30:35].reshape((5,1))
+                Z1 = np.dot(W1.reshape(5,4), observation) + b1.reshape(5,1)
                 A1 = np.tanh(Z1)
-                Z2 = np.dot(parameter_matrix[i_episode][20:30].reshape((2,5)), A1) + parameter_matrix[i_episode][35:37].reshape((2,1))
+                Z2 = np.dot(W2.reshape(2,5), A1) + b2.reshape(2,1)
                 A2 = np.tanh(Z2)
                 if (isinstance(env.action_space, gym.spaces.box.Box)):
                     action = A2
@@ -48,16 +56,17 @@ for trials in range(1,5): # The convergence depends upon the randomness of the p
                 observation, reward, done, info = env.step(action) # take a random action
                 if(reward==1):
                     r+=1
-            env.close()
             print('reward for '+str(i_episode)+'th episode '+str(gen)+'th generation and '+str(trials)+' trial = ', r)
             r_ls.append(r)
-            r=0
+        env.close()
+
+        r=0
         index = np.argsort(r_ls)
         print(index)
         for rep in range(0, pop_size//2): # Loop to shuffle the rows depending upon the fitness
             parameter_matrix[index[rep]]=variation(parameter_matrix[index[rep+(pop_size//2)]])
     
-        if(gen>10 and sum(r_ls)<80*20): # A condition to observe that the performance is not under-fitted.
+        if(gen>10 and sum(r_ls)<50*20): # A condition to observe that the performance is not under-fitted.
             print('The training is skipped.......at gen 11')
             break
         
@@ -71,8 +80,6 @@ for trials in range(1,5): # The convergence depends upon the randomness of the p
         break
 
     
-    parameter_matrix = np.random.randn(pop_size, len(theta_0)) * pvariance
-
 np.savetxt('parameter_matrix.csv', parameter_matrix, delimiter=',')
 np.save('parameter.npy',parameter_matrix)
 
